@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moon Web Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="index.css">
+    <link rel="shortcut icon" href="/image/moon.png" type="image/x-icon">
+</head>
+
+<body>
+    <div id="stars"></div>
+    <div id="stars2"></div>
+    <div id="stars3"></div>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img src="/image/moon.png" alt="Moon GIF" class="moon-gif">
+            <span class="brand-text">Moon</span>
+        </div>
+
+        <!-- Desktop nav links -->
+        <div class="nav-links" id="navLinks">
+            <a href="#" class="active">Home</a>
+            <a href="#players">Player</a>
+            <a href="#developer">Developer</a>
+            <a href="#about">About</a>
+            <a href="movie.html"> Movie Player</a>
+            <!-- Room button injected here by script.js -->
+        </div>
+
+        <!-- Hamburger (mobile only) -->
+        <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </nav>
+
+    <!-- Mobile drawer -->
+    <div class="mobile-drawer" id="mobileDrawer">
+        <div class="drawer-backdrop" id="drawerBackdrop"></div>
+        <div class="drawer-panel" id="drawerPanel">
+            <div class="drawer-header">
+                <div class="nav-brand">
+                    <img src="/image/moon.png" alt="Moon" class="moon-gif">
+                    <span class="brand-text">Moon</span>
+                </div>
+                <button class="drawer-close" id="drawerClose"><i class="fas fa-times"></i></button>
+            </div>
+            <nav class="drawer-nav">
+                <a href="#" class="drawer-link active" data-close>
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="#players" class="drawer-link" data-close>
+                    <i class="fas fa-headphones"></i> Player
+                </a>
+                <a href="#developer" class="drawer-link" data-close>
+                    <i class="fas fa-code"></i> Developer
+                </a>
+                <a href="#about" class="drawer-link" data-close>
+                    <i class="fas fa-info-circle"></i> About
+                </a>
+                <a href="movie.html" class="drawer-link" data-close>
+                    <i class="fas fa-film"></i> Movie Player
+                </a>
+                <!-- Room button injected here by script.js for mobile -->
+                <div id="drawerRoomSlot"></div>
+            </nav>
+            <div class="drawer-footer">
+                <p>Moon Web Player © 2026</p>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="hero" id="players">
+            <h1>Moon <span class="highlight">Web Player</span></h1>
+            <p>Search and play unlimited songs - 24/7 reliable playback</p>
+
+            <div class="search-container">
+                <input type="text" placeholder="Search for songs..." id="searchInput">
+                <button class="search-btn"><i class="fas fa-search"></i> Search</button>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn active"><i class="fas fa-list-ul"></i> Queue (0)</button>
+                <button class="action-btn"><i class="far fa-heart"></i> Favorites (0)</button>
+                <button class="action-btn"><i class="fas fa-history"></i> History (0)</button>
+            </div>
+        </div>
+
+        <div class="movie-main-layout">
+            <div class="panels movie-left" style="width: 100%;">
+                <div class="panel left-panel">
+                    <div class="album-art-container">
+                        <img src="" alt="Album Art" id="albumArt" style="display: none;">
+                        <div class="placeholder-art" id="placeholderArt">
+                            <i class="fas fa-music"></i>
+                        </div>
+                    </div>
+
+                    <div class="track-info">
+                        <h2 id="trackTitle">No Track Playing</h2>
+                        <p id="trackAuthor">Unknown Artist</p>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-bar-bg" id="progressBg">
+                            <div class="progress-bar-fill" id="progressBar"></div>
+                        </div>
+                        <div class="time-info">
+                            <span id="currentTime">0:00</span>
+                            <span id="totalTime">0:00</span>
+                        </div>
+                    </div>
+
+                    <div class="player-controls">
+                        <button class="control-btn" id="autoplayBtn" title="Autoplay Mix"
+                            style="color: var(--text-secondary);"><i class="fas fa-magic"></i></button>
+                        <button class="control-btn" id="shuffleBtn" title="Shuffle"><i
+                                class="fas fa-random"></i></button>
+                        <button class="control-btn" id="prevBtn" title="Previous"><i
+                                class="fas fa-step-backward"></i></button>
+                        <button class="play-btn" id="playPauseBtn" title="Play/Pause"><i
+                                class="fas fa-play"></i></button>
+                        <button class="control-btn" id="nextBtn" title="Next"><i
+                                class="fas fa-step-forward"></i></button>
+                        <button class="control-btn" id="repeatBtn" title="Repeat"><i class="fas fa-redo"></i></button>
+                    </div>
+
+                    <div class="player-footer">
+                        <button class="control-btn"><i class="fas fa-volume-up"></i></button>
+                        <div class="volume-slider" id="volumeControl">
+                            <div class="volume-slider-track">
+                                <div class="volume-fill" id="volumeFill"></div>
+                            </div>
+                        </div>
+                        <button class="control-btn" id="favBtn" style="margin-left: auto;"><i
+                                class="far fa-heart"></i></button>
+                    </div>
+                </div>
+
+                <div class="panel right-panel">
+                    <div class="panel-header">
+                        <h3>Queue <span class="badge" id="queueCount">0</span></h3>
+                        <div class="panel-actions">
+                            <button class="icon-btn"><i class="fas fa-random"></i> Shuffle</button>
+                            <button class="icon-btn"><i class="far fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                    <div class="queue-list" id="queueList">
+                        <div class="queue-empty-state">
+                            <i class="fas fa-music empty-icon"></i>
+                            <p>Queue is empty</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="movie-side-column" id="movieSideCard" style="display: none; height: 100%;">
+                <div class="movie-right-sidebar">
+                    <div class="room-sidebar-header">
+                        <span>Room: <span id="sideCardRoomCode" style="color:var(--accent)">----</span></span>
+                        <span style="font-size:0.8rem; color:var(--text-secondary)"><i class="fas fa-users"></i> <span
+                                id="sideCardMemberCount">1</span></span>
+                    </div>
+
+                    <div class="room-sidebar-members" id="sideCardMembersList">
+                        <!-- Members will be injected here -->
+                    </div>
+
+                    <div class="sidebar-controls">
+                        <button class="sidebar-btn" id="toggleSideMicBtn" title="Toggle Microphone"><i
+                                class="fas fa-microphone-slash"></i></button>
+                        <button class="sidebar-btn" id="toggleSideCamBtn" title="Toggle Camera"><i
+                                class="fas fa-video-slash"></i></button>
+                        <button class="sidebar-btn" id="toggleSideChatBtn" title="Open Chat"><i
+                                class="fas fa-comment-dots"></i></button>
+                    </div>
+                </div>
+
+                <!-- Floating Chat Container (initially hidden) -->
+                <div class="floating-chat-container" id="floatingChatContainer">
+                    <div class="floating-chat-header">
+                        <span>Room Chat</span>
+                        <button class="floating-chat-close" id="floatingChatClose"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="floating-chat-messages" id="floatingChatMessages">
+                        <!-- Messages go here -->
+                    </div>
+                    <div class="floating-chat-input-area">
+                        <input type="text" class="floating-chat-input" id="floatingChatInput"
+                            placeholder="Type a message...">
+                        <button class="floating-chat-emoji-btn" id="floatingChatEmojiBtn"><i
+                                class="far fa-smile"></i></button>
+                        <button class="floating-chat-send-btn" id="floatingChatSendBtn"><i
+                                class="fas fa-paper-plane"></i></button>
+
+                        <!-- Emoji Picker -->
+                        <div class="emoji-picker-container" id="emojiPicker">
+                            <div class="emoji-item">😀</div>
+                            <div class="emoji-item">😂</div>
+                            <div class="emoji-item">🥰</div>
+                            <div class="emoji-item">😎</div>
+                            <div class="emoji-item">🔥</div>
+                            <div class="emoji-item">👍</div>
+                            <div class="emoji-item">🎉</div>
+                            <div class="emoji-item">❤️</div>
+                            <div class="emoji-item">😢</div>
+                            <div class="emoji-item">😡</div>
+                            <div class="emoji-item">🤔</div>
+                            <div class="emoji-item">✨</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="developer-section" id="developer">
+            <h2>Developer</h2>
+            <div class="dev-card">
+                <div class="dev-avatar">
+                    <img src="/image/dev1.jpeg" alt="" srcset="">
+                </div>
+                <div class="dev-info">
+                    <h3>Aditya Kumar <span class="dev-aka">[aka Nothing💌]</span></h3>
+                    <p class="dev-role">Full Stack Developer</p>
+                    <div class="dev-languages">
+                        <span class="lang-badge js">JavaScript</span>
+                        <span class="lang-badge py">Python</span>
+                        <span class="lang-badge react">React</span>
+                        <span class="lang-badge html">HTML</span>
+                    </div>
+                    <div class="dev-contact">
+                        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=lambo5981@gmail.com" target="_blank"
+                            class="contact-btn">
+                            <i class="fas fa-envelope"></i> Email Me
+                        </a>
+                        <a href="https://wa.me/919241123164" target="_blank" class="contact-btn wa-btn">
+                            <i class="fab fa-whatsapp"></i> WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-section" id="about">
+            <h2>About</h2>
+            <div class="about-card">
+                <p><strong>Moon Web Player</strong> is a powerful, space-themed music player that lets you search and
+                    stream unlimited songs from YouTube using Lavalink. Built with love by <span
+                        class="highlight">Aditya Kumar</span>.</p>
+                <div class="about-features">
+                    <div class="feature-item">
+                        <i class="fas fa-search"></i>
+                        <span>Search any song instantly</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-headphones"></i>
+                        <span>High quality audio playback</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-list"></i>
+                        <span>Queue management system</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-random"></i>
+                        <span>Shuffle & Repeat modes</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="privacy-section" id="privacy">
+            <h2>Privacy Policy</h2>
+            <div class="privacy-card">
+                <p><strong>Moon Web Player</strong> is committed to protecting your privacy. We believe in providing a
+                    seamless music experience without compromising your personal information.</p>
+                <div class="privacy-features">
+                    <div class="feature-item">
+                        <i class="fas fa-database"></i>
+                        <span><strong>No Data Stored:</strong> We do not store any of your personal data in our
+                            database. Your listening history and queue remain local to your current session.</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-user-secret"></i>
+                        <span><strong>Anonymous Usage:</strong> No signup or login is required. You can enjoy unlimited
+                            music with complete anonymity.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div id="ytplayer-container"
+            style="position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;">
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <img src="/image/moon.png" alt="Moon" class="footer-logo">
+                <span>Moon Web Player</span>
+            </div>
+            <div class="footer-links">
+                <a href="#">Home</a>
+                <a href="#players">Player</a>
+                <a href="#developer">Developer</a>
+                <a href="#about">About</a>
+            </div>
+            <div class="footer-socials">
+                <a href="#"><i class="fab fa-discord"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Moon Web Player. Made with 💌 by Aditya Kumar [aka Nothing]</p>
+        </div>
+    </footer>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

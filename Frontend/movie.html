@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moon Movie Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="index.css">
+    <link rel="shortcut icon" href="/image/moon.png" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js"></script>
+    <style>
+        .movie-page-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            width: 100%;
+        }
+
+        .movie-header-nav {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .movie-header-nav h2 {
+            font-size: 5.2rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .movie-header-nav h2 span {
+            color: var(--accent);
+        }
+
+        .movie-header-nav p {
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            margin-top: 0.4rem;
+        }
+
+        .movie-input-container {
+            display: flex;
+            width: 100%;
+            background: rgba(25, 25, 30, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.5rem;
+            backdrop-filter: blur(10px);
+            margin: 0 auto 1.5rem auto;
+        }
+
+        .movie-input-container input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 0.8rem 1.2rem;
+            font-size: 1rem;
+            outline: none;
+            min-width: 0;
+        }
+
+        .movie-input-container input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .movie-player-wrapper {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .movie-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            gap: 1rem;
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+        }
+
+        .movie-placeholder i {
+            font-size: 4rem;
+            opacity: 0.4;
+        }
+
+        .movie-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="stars"></div>
+    <div id="stars2"></div>
+    <div id="stars3"></div>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="index.html" style="display:flex; align-items:center; gap:0.8rem; text-decoration:none;">
+                <img src="/image/moon.png" alt="Moon GIF" class="moon-gif">
+                <span class="brand-text">Moon</span>
+            </a>
+        </div>
+
+        <!-- Desktop nav links -->
+        <div class="nav-links" id="navLinks">
+            <a href="#">Home</a>
+            <a href="index.html#players">Player</a>
+            <a href="index.html#developer">Developer</a>
+            <a href="index.html#about">About</a>
+            <a href="index.html" class="active">Music Player</a>
+            <button id="roomNavBtn" title="Listen Together"
+                style="background: transparent; border: none; color: var(--text-secondary); font-size: 1.1rem; cursor: pointer; position: relative; padding: 4px 8px; transition: color 0.2s; display: flex; align-items: center;"><i
+                    class="fas fa-users"></i><span id="roomBadge" class="room-nav-badge"
+                    style="display:none; position:absolute; top:-4px; right:-2px; background:var(--accent); color:#000; font-size:.6rem; font-weight:700; width:16px; height:16px; border-radius:50%; align-items:center; justify-content:center">0</span></button>
+        </div>
+
+        <!-- Hamburger (mobile only) -->
+        <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </nav>
+
+    <!-- Mobile drawer -->
+    <div class="mobile-drawer" id="mobileDrawer">
+        <div class="drawer-backdrop" id="drawerBackdrop"></div>
+        <div class="drawer-panel" id="drawerPanel">
+            <div class="drawer-header">
+                <div class="nav-brand">
+                    <img src="/image/moon.png" alt="Moon" class="moon-gif">
+                    <span class="brand-text">Moon</span>
+                </div>
+                <button class="drawer-close" id="drawerClose"><i class="fas fa-times"></i></button>
+            </div>
+            <nav class="drawer-nav">
+                <a href="#" class="drawer-link" data-close>
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="index.html#players" class="drawer-link" data-close>
+                    <i class="fas fa-headphones"></i> Player
+                </a>
+                <a href="index.html#developer" class="drawer-link" data-close>
+                    <i class="fas fa-code"></i> Developer
+                </a>
+                <a href="index.html#about" class="drawer-link" data-close>
+                    <i class="fas fa-info-circle"></i> About
+                </a>
+                <a href="movie.html" class="drawer-link active" data-close>
+                    Movie Player
+                </a>
+                <div id="drawerRoomSlot">
+                    <button class="drawer-room-btn"><i class="fas fa-users"></i> Listen Together</button>
+                </div>
+            </nav>
+            <div class="drawer-footer">
+                <p>Moon Web Player © 2026</p>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="movie-page-container">
+            <div class="movie-header-nav">
+                <h2>Moon <span class="highlight">Movie Player</span></h2>
+                <p>Paste a link and play movies together</p>
+            </div>
+
+            <div class="movie-input-container">
+                <input type="text" id="movieLinkInput"
+                    placeholder="Enter movie direct link or embed URL (e.g. mp4, m3u8)...">
+                <button id="localFileBtn" title="Play Local File"
+                    style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer; padding: 0 10px; font-size: 1.2rem; transition: color 0.2s;"><i
+                        class="fas fa-folder-open"></i></button>
+                <input type="file" id="localFileInput" accept="video/*,.mkv,.avi,.webm,.ts" style="display: none;">
+                <button class="search-btn" id="playMovieBtn" style="border-radius: 8px; margin-left: 10px;"><i
+                        class="fas fa-play"></i> Play</button>
+            </div>
+
+            <div class="movie-main-layout">
+                <div class="movie-left">
+                    <div class="movie-player-wrapper">
+                        <div id="moviePlaceholder" class="movie-placeholder">
+                            <i class="fas fa-video"></i>
+                            <p>Enter a link above to start streaming</p>
+                        </div>
+                        <!-- For normal videos and HLS -->
+                        <video id="movieVideo" class="movie-iframe" controls
+                            style="display: none; background: #000; width: 100%; height: 100%; border-radius: 16px;"></video>
+                        <!-- For embeds like YouTube -->
+                        <iframe id="movieIframe" class="movie-iframe" allowfullscreen style="display: none;"></iframe>
+                    </div>
+                </div>
+
+                <div class="movie-side-column" id="movieSideCard">
+                    <div class="movie-right-sidebar">
+                        <div class="room-sidebar-header">
+                            <span>Room: <span id="sideCardRoomCode" style="color:var(--accent)">----</span></span>
+                            <span style="font-size:0.8rem; color:var(--text-secondary)"><i class="fas fa-users"></i>
+                                <span id="sideCardMemberCount">1</span></span>
+                        </div>
+
+                        <div class="room-sidebar-members" id="sideCardMembersList">
+                            <!-- Members will be injected here -->
+                        </div>
+
+                        <div class="sidebar-controls">
+                            <button class="sidebar-btn" id="toggleSideMicBtn" title="Toggle Microphone"><i
+                                    class="fas fa-microphone-slash"></i></button>
+                            <button class="sidebar-btn" id="toggleSideCamBtn" title="Toggle Camera"><i
+                                    class="fas fa-video-slash"></i></button>
+                            <button class="sidebar-btn" id="toggleSideChatBtn" title="Open Chat"><i
+                                    class="fas fa-comment-dots"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Floating Chat Container (initially hidden) -->
+                    <div class="floating-chat-container" id="floatingChatContainer">
+                        <div class="floating-chat-header">
+                            <span>Room Chat</span>
+                            <button class="floating-chat-close" id="floatingChatClose"><i
+                                    class="fas fa-times"></i></button>
+                        </div>
+                        <div class="floating-chat-messages" id="floatingChatMessages">
+                            <!-- Messages go here -->
+                        </div>
+                        <div class="floating-chat-input-area">
+                            <input type="text" class="floating-chat-input" id="floatingChatInput"
+                                placeholder="Type a message...">
+                            <button class="floating-chat-emoji-btn" id="floatingChatEmojiBtn"><i
+                                    class="far fa-smile"></i></button>
+                            <button class="floating-chat-send-btn" id="floatingChatSendBtn"><i
+                                    class="fas fa-paper-plane"></i></button>
+
+                            <!-- Emoji Picker -->
+                            <div class="emoji-picker-container" id="emojiPicker">
+                                <div class="emoji-item">😀</div>
+                                <div class="emoji-item">😂</div>
+                                <div class="emoji-item">🥰</div>
+                                <div class="emoji-item">😎</div>
+                                <div class="emoji-item">🔥</div>
+                                <div class="emoji-item">👍</div>
+                                <div class="emoji-item">🎉</div>
+                                <div class="emoji-item">❤️</div>
+                                <div class="emoji-item">😢</div>
+                                <div class="emoji-item">😡</div>
+                                <div class="emoji-item">🤔</div>
+                                <div class="emoji-item">✨</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <img src="/image/moon.png" alt="Moon" class="footer-logo">
+                <span>Moon Web Player</span>
+            </div>
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="index.html#players">Player</a>
+                <a href="index.html#developer">Developer</a>
+                <a href="index.html#about">About</a>
+                <a href="movie.html">Movie Player</a>
+            </div>
+            <div class="footer-socials">
+                <a href="#"><i class="fab fa-discord"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Moon Web Player. Made with 💌 by Aditya Kumar [aka Nothing]</p>
+        </div>
+    </footer>
+
+    <div id="roomToast" class="room-toast"></div>
+
+    <div id="roomModal"
+        style="display:none; position:fixed; inset:0; z-index:9998; align-items:flex-end; justify-content:center;">
+        <div class="rm-backdrop"
+            style="position: absolute; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(8px); animation: cqFadeIn .2s ease;">
+        </div>
+        <div class="rm-panel"
+            style="position: relative; z-index: 1; background: linear-gradient(160deg,rgba(18,18,24,.98) 0%,rgba(12,12,18,.98) 100%); border: 1px solid rgba(255,255,255,.1); border-radius: 24px 24px 0 0; width: 100%; max-width: 460px; padding: 2rem; max-height: 90vh; overflow-y: auto;">
+            <button class="rm-close" id="rmClose"
+                style="position: absolute; top: 1.2rem; right: 1.2rem; background: rgba(255,255,255,.07); border: none; color: rgba(255,255,255,.6); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i
+                    class="fas fa-times"></i></button>
+
+            <!-- Screen: Entry -->
+            <div class="rm-screen" id="rmScreenEntry">
+                <div class="rm-logo"
+                    style="width: 60px; height: 60px; border-radius: 50%; background: rgba(0,229,255,.1); border: 1px solid rgba(0,229,255,.25); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: var(--accent); margin: 0 auto 1rem;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h2 class="rm-title"
+                    style="text-align: center; font-size: 1.4rem; font-weight: 700; margin-bottom: .4rem;">Watch
+                    Together</h2>
+                <p class="rm-sub"
+                    style="text-align: center; color: var(--text-secondary); font-size: .88rem; margin-bottom: 1.5rem;">
+                    Create a room or join a friend's room to watch in sync.</p>
+                <div class="rm-name-wrap" style="margin-bottom: 1.2rem;">
+                    <input id="rmUsername" class="rm-input" placeholder="Your name" maxlength="20"
+                        style="width: 100%; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: #fff; padding: .7rem 1rem; border-radius: 10px; font-size: .95rem; outline: none; transition: border-color .2s;" />
+                </div>
+                <div class="rm-entry-btns" style="display: flex; flex-direction: column; gap: .8rem;">
+                    <button class="rm-btn rm-btn-primary" id="rmCreateBtn"
+                        style="padding: .75rem 1.2rem; border-radius: 10px; border: none; font-size: .9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: .5rem; background: var(--accent); color: #111;"><i
+                            class="fas fa-plus"></i> Create Room</button>
+                    <div class="rm-divider"
+                        style="text-align: center; color: var(--text-secondary); font-size: .8rem; position: relative;">
+                        or</div>
+                    <div class="rm-join-row" style="display: flex; gap: .6rem;">
+                        <input id="rmJoinCode" class="rm-input rm-code-input" placeholder="Enter 4-digit code"
+                            maxlength="4"
+                            style="width: 100%; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: #fff; padding: .7rem 1rem; border-radius: 10px; font-size: 1.1rem; font-weight: 600; text-align: center; letter-spacing: .2em; outline: none;" />
+                        <button class="rm-btn rm-btn-ghost" id="rmJoinBtn"
+                            style="padding: .75rem 1.2rem; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); font-size: .9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: .5rem; background: rgba(255,255,255,.07); color: #fff;"><i
+                                class="fas fa-sign-in-alt"></i> Join</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen: Room -->
+            <div class="rm-screen" id="rmScreenRoom" style="display:none">
+                <div class="rm-room-header"
+                    style="background: rgba(0,229,255,.05); border: 1px solid rgba(0,229,255,.12); border-radius: 14px; padding: 1rem 1.2rem; margin-bottom: 1.2rem;">
+                    <div class="rm-room-code-wrap">
+                        <span class="rm-room-label"
+                            style="font-size: .7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .1em;">Room
+                            Code</span>
+                        <div class="rm-room-code-row"
+                            style="display: flex; align-items: center; gap: .7rem; margin-top: .2rem;">
+                            <span class="rm-room-code" id="roomCodeDisplay"
+                                style="font-size: 2.2rem; font-weight: 700; color: var(--accent); letter-spacing: .3em;">----</span>
+                            <button class="rm-copy-btn" id="rmCopyCode" title="Copy code"
+                                style="background: rgba(0,229,255,.1); border: 1px solid rgba(0,229,255,.2); color: var(--accent); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i
+                                    class="fas fa-copy"></i></button>
+                        </div>
+                    </div>
+                    <div class="rm-room-info"
+                        style="display: flex; align-items: center; gap: .5rem; color: var(--text-secondary); font-size: .82rem; margin-top: .5rem;">
+                        <span id="roomStatus">Connecting...</span>
+                        <span class="rm-dot" style="opacity: .4;">•</span>
+                        <span><i class="fas fa-users"></i> <span id="roomMemberCount">1</span></span>
+                    </div>
+                </div>
+
+                <div class="rm-members-section">
+                    <div class="rm-section-title"
+                        style="font-size: .7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .1em; margin: .8rem 0 .5rem;">
+                        Members</div>
+                    <div id="roomMembersList" class="rm-members-list"
+                        style="display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem;"></div>
+                </div>
+
+                <div class="rm-chat-section">
+                    <div class="rm-section-title"
+                        style="font-size: .7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .1em; margin: .8rem 0 .5rem;">
+                        Chat</div>
+                    <div id="roomChatLog" class="rm-chat-log"
+                        style="height: 160px; overflow-y: auto; background: rgba(0,0,0,.2); border-radius: 10px; padding: .7rem; margin-bottom: .5rem; display: flex; flex-direction: column; gap: .4rem;">
+                    </div>
+                    <div class="rm-chat-input-row" style="display: flex; gap: .5rem;">
+                        <input id="rmChatInput" class="rm-input" placeholder="Say something..." maxlength="200"
+                            style="width: 100%; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: #fff; padding: .7rem 1rem; border-radius: 10px; font-size: .95rem; outline: none;" />
+                        <button class="rm-btn rm-btn-primary rm-send-btn" id="rmSendChat"
+                            style="width: 42px; height: 42px; padding: 0; flex-shrink: 0; border-radius: 10px; border: none; cursor: pointer; background: var(--accent); color: #111; display: flex; align-items: center; justify-content: center;"><i
+                                class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+
+                <button class="rm-btn rm-btn-danger rm-full-btn" id="roomLeaveBtn"
+                    style="display:none; margin-top:12px; width: 100%; padding: .75rem 1.2rem; border-radius: 10px; border: 1px solid rgba(255,75,75,.3); font-size: .9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: .5rem; background: rgba(255,75,75,.15); color: #ff8888;"><i
+                        class="fas fa-door-open"></i> Leave Room</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Hamburger Menu Logic
+            const hamburger = document.getElementById('hamburgerBtn');
+            const mobileDrawer = document.getElementById('mobileDrawer');
+            const drawerBackdrop = document.getElementById('drawerBackdrop');
+            const drawerClose = document.getElementById('drawerClose');
+
+            // --- App Config for Deployment & LAN Testing ---
+            // If opened via raw file:///, default to localhost. Otherwise, use the actual host IP (vital for LAN phone testing)
+            const isLocalHost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+            const isLocalFile = window.location.protocol === 'file:';
+            const BACKEND_URL = (isLocalFile || isLocalHost) ? 'http://localhost:3000' : window.location.origin;
+            const WS_URL = BACKEND_URL.replace(/^http/, 'ws');
+            // ---------------------------------
+
+            function openDrawer() {
+                if (mobileDrawer) mobileDrawer.classList.add('open');
+                if (hamburger) hamburger.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeDrawer() {
+                if (mobileDrawer) mobileDrawer.classList.remove('open');
+                if (hamburger) hamburger.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+            if (hamburger) hamburger.addEventListener('click', openDrawer);
+            if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+            if (drawerBackdrop) drawerBackdrop.addEventListener('click', closeDrawer);
+
+            // Local File Logic
+            const localFileBtn = document.getElementById('localFileBtn');
+            const localFileInput = document.getElementById('localFileInput');
+
+            if (localFileBtn && localFileInput) {
+                localFileBtn.addEventListener('click', () => {
+                    localFileInput.click();
+                });
+
+                localFileInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    // ── Step 1: Play locally for host immediately ─────────────
+                    const fileUrl = URL.createObjectURL(file);
+                    if (moviePlaceholder) moviePlaceholder.style.display = 'none';
+                    movieIframe.style.display = 'none';
+                    movieIframe.src = '';
+                    videoPlayer.style.display = 'block';
+                    if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+                    videoPlayer.src = fileUrl;
+                    videoPlayer.play().catch(err => console.error("Playback prevented:", err));
+                    if (movieLinkInput) movieLinkInput.value = `Local File: ${file.name}`;
+
+                    // ── Step 2: Upload file to backend for server-based streaming ──
+                    // This allows members on ANY network to stream via backend URL
+                    showRoomToast('⏳ Uploading file to server for room sharing...', 'info');
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('video', file);
+
+                        // Show upload progress
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('POST', `${BACKEND_URL}/api/stream/localfile`);
+
+                        let lastUploadPct = -1;
+                        xhr.upload.onprogress = (evt) => {
+                            if (evt.lengthComputable) {
+                                const pct = Math.round((evt.loaded / evt.total) * 100);
+                                if (pct !== lastUploadPct) {
+                                    showRoomToast(`📤 Uploading: ${pct}%`, 'info');
+                                    if (movieLinkInput) movieLinkInput.value = `Local File: ${file.name} [Uploading ${pct}%...]`;
+                                    lastUploadPct = pct;
+                                }
+                            }
+                        };
+
+                        xhr.onload = () => {
+                            if (xhr.status === 200) {
+                                const data = JSON.parse(xhr.responseText);
+                                // Store sessionId for cleanup later
+                                currentLocalSessionId = data.sessionId;
+                                // Use localstream: prefix so members know to use backend URL
+                                currentMovieUrl = `localstream:${data.sessionId}:${encodeURIComponent(file.name)}`;
+
+                                if (movieLinkInput) movieLinkInput.value = `Local File: ${file.name} [Ready ✓]`;
+                                showRoomToast('✅ Upload done! Members can now stream.', 'info');
+
+                                // Sync to room members
+                                roomSyncStateWithRetry();
+                                console.log('[LocalStream] Session registered:', data.sessionId);
+                            } else {
+                                throw new Error(`Upload failed: ${xhr.status}`);
+                            }
+                        };
+
+                        xhr.onerror = () => {
+                            // Upload failed — fallback to WebTorrent P2P
+                            console.warn('[LocalStream] Upload failed, falling back to WebTorrent P2P');
+                            showRoomToast('⚠️ Server upload failed, using P2P fallback...', 'info');
+                            startP2PSeeding(file);
+                        };
+
+                        xhr.send(formData);
+
+                    } catch (uploadErr) {
+                        console.warn('[LocalStream] Upload error, falling back to P2P:', uploadErr);
+                        showRoomToast('⚠️ Upload failed, using P2P...', 'info');
+                        startP2PSeeding(file);
+                    }
+                });
+            }
+
+            document.querySelectorAll('[data-close]').forEach(el => {
+                el.addEventListener('click', closeDrawer);
+            });
+
+            // Movie Player Logic
+            const playMovieBtn = document.getElementById('playMovieBtn');
+            const movieLinkInput = document.getElementById('movieLinkInput');
+            const moviePlaceholder = document.getElementById('moviePlaceholder');
+            const movieIframe = document.getElementById('movieIframe');
+            const videoPlayer = document.getElementById('movieVideo');
+            let hlsInstance = null;
+
+            const playMovie = async () => {
+                if (!movieLinkInput) return;
+                let url = movieLinkInput.value.trim();
+                if (!url) return;
+
+                if (url.startsWith('Local File:')) {
+                    // Already handled by the local video file picker
+                    return;
+                }
+
+                if (url.startsWith('localstream:')) {
+                    // ── Server-based local file stream ──────────────────────────
+                    // Format: localstream:SESSION_ID:ENCODED_FILENAME
+                    const parts = url.split(':');
+                    const sessionId = parts[1];
+                    const fileName = decodeURIComponent(parts[2] || 'video');
+                    const streamUrl = `${BACKEND_URL}/api/stream/localfile/${sessionId}`;
+
+                    if (moviePlaceholder) {
+                        moviePlaceholder.style.display = 'flex';
+                        moviePlaceholder.querySelector('i').className = 'fas fa-spinner fa-spin';
+                        moviePlaceholder.querySelector('p').textContent = `🎬 Loading: ${fileName}...`;
+                    }
+                    movieIframe.style.display = 'none';
+                    videoPlayer.style.display = 'none';
+
+                    // Test if stream is reachable
+                    fetch(streamUrl, { method: 'HEAD' })
+                        .then(r => {
+                            if (!r.ok) throw new Error(`Stream not available (${r.status})`);
+                            if (moviePlaceholder) moviePlaceholder.style.display = 'none';
+                            videoPlayer.style.display = 'block';
+                            videoPlayer.src = streamUrl;
+                            videoPlayer.load();
+                            videoPlayer.play().catch(e => console.warn('Autoplay blocked:', e));
+                            playMovieBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                            if (movieLinkInput) movieLinkInput.value = `Streaming: ${fileName}`;
+                        })
+                        .catch(err => {
+                            console.error('[LocalStream] Stream unreachable:', err);
+                            if (moviePlaceholder) {
+                                moviePlaceholder.style.display = 'flex';
+                                moviePlaceholder.querySelector('i').className = 'fas fa-exclamation-triangle';
+                                moviePlaceholder.querySelector('p').textContent = '❌ Stream not available. Host may have closed the tab.';
+                            }
+                            playMovieBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                        });
+                    return;
+                }
+
+                if (url.startsWith('localseed:')) {
+                    // Legacy P2P fallback (used when server upload fails)
+                    const magnetURI = url.replace('localseed:', '');
+                    if (moviePlaceholder) {
+                        moviePlaceholder.style.display = 'flex';
+                        moviePlaceholder.querySelector('i').className = 'fas fa-spinner fa-spin';
+                        moviePlaceholder.querySelector('p').textContent = 'Connecting via P2P stream...';
+                    }
+                    movieIframe.style.display = 'none';
+                    videoPlayer.style.display = 'none';
+                    playMovieBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                    const trackerOpts = {
+                        announce: [
+                            'wss://tracker.openwebtorrent.com',
+                            'wss://tracker.webtorrent.dev',
+                            'wss://tracker.files.fm:7073/announce',
+                            'wss://spacetradersapi-chatbox.herokuapp.com:443/announce'
+                        ]
+                    };
+
+                    if (!window.wtClient) window.wtClient = new WebTorrent({ tracker: trackerOpts });
+
+                    // Cleanup previous torrents
+                    window.wtClient.torrents.forEach(t => t.destroy());
+
+                    window.wtClient.add(magnetURI, trackerOpts, (torrent) => {
+                        const file = torrent.files.find(f =>
+                            /\.(mp4|webm|mkv|avi|ts|mov)$/i.test(f.name)
+                        ) || torrent.files[0];
+
+                        console.log('[WebTorrent] Torrent ready, file:', file.name);
+
+                        // Update placeholder to show progress
+                        if (moviePlaceholder) {
+                            moviePlaceholder.style.display = 'flex';
+                            moviePlaceholder.querySelector('i').className = 'fas fa-spinner fa-spin';
+                            moviePlaceholder.querySelector('p').textContent = `📥 Downloading: ${file.name}... (0%)`;
+                        }
+
+                        // Show download progress
+                        torrent.on('download', () => {
+                            const pct = (torrent.progress * 100).toFixed(1);
+                            const placeP = moviePlaceholder ? moviePlaceholder.querySelector('p') : null;
+                            if (placeP && moviePlaceholder.style.display !== 'none') {
+                                placeP.textContent = `📥 Buffering: ${file.name}... (${pct}%)`;
+                            }
+                        });
+
+                        // Clean up any previous WT wrapper
+                        const oldWrapper = document.getElementById('wtVideoWrapper');
+                        if (oldWrapper) oldWrapper.remove();
+
+                        // Hide default video element
+                        videoPlayer.style.display = 'none';
+                        if (moviePlaceholder) moviePlaceholder.style.display = 'none';
+
+                        const playerWrapper = videoPlayer.parentElement;
+                        const wtWrapper = document.createElement('div');
+                        wtWrapper.id = 'wtVideoWrapper';
+                        wtWrapper.style.cssText = 'width:100%;height:100%;position:absolute;inset:0;background:#000;z-index:2;display:flex;align-items:center;justify-content:center;';
+                        playerWrapper.appendChild(wtWrapper);
+
+                        // METHOD 1: Try appendTo (most reliable in browser builds)
+                        try {
+                            file.appendTo(wtWrapper, { autoplay: true, muted: false }, (err, elem) => {
+                                if (err) {
+                                    console.warn('[WT] appendTo failed, trying renderTo:', err);
+                                    // METHOD 2: Fallback to renderTo
+                                    file.renderTo(wtWrapper, { autoplay: true }, (err2, elem2) => {
+                                        if (err2) {
+                                            console.error('[WT] Both methods failed:', err2);
+                                            // METHOD 3: Final fallback - getBlobURL
+                                            file.getBlobURL((blobErr, blobUrl) => {
+                                                if (blobErr) {
+                                                    wtWrapper.remove();
+                                                    videoPlayer.style.display = 'block';
+                                                    if (moviePlaceholder) {
+                                                        moviePlaceholder.style.display = 'flex';
+                                                        moviePlaceholder.querySelector('i').className = 'fas fa-exclamation-triangle';
+                                                        moviePlaceholder.querySelector('p').textContent = '❌ Could not stream. Host may have closed the tab.';
+                                                    }
+                                                } else {
+                                                    wtWrapper.remove();
+                                                    videoPlayer.style.display = 'block';
+                                                    videoPlayer.src = blobUrl;
+                                                    videoPlayer.controls = true;
+                                                    videoPlayer.play().catch(e => { });
+                                                }
+                                                playMovieBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                                            });
+                                            return;
+                                        }
+                                        if (elem2) {
+                                            elem2.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+                                            elem2.controls = true;
+                                            elem2.play().catch(e => { });
+                                        }
+                                        playMovieBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                                    });
+                                    return;
+                                }
+                                if (elem) {
+                                    elem.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+                                    elem.controls = true;
+                                    elem.play().catch(e => console.warn('Autoplay blocked:', e));
+                                }
+                                playMovieBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                            });
+                        } catch (wtErr) {
+                            console.error('[WT] appendTo threw exception:', wtErr);
+                            // Direct blob fallback
+                            file.getBlobURL((blobErr, blobUrl) => {
+                                wtWrapper.remove();
+                                videoPlayer.style.display = 'block';
+                                if (!blobErr && blobUrl) {
+                                    videoPlayer.src = blobUrl;
+                                    videoPlayer.controls = true;
+                                    videoPlayer.play().catch(e => { });
+                                } else if (moviePlaceholder) {
+                                    moviePlaceholder.style.display = 'flex';
+                                    moviePlaceholder.querySelector('i').className = 'fas fa-exclamation-triangle';
+                                    moviePlaceholder.querySelector('p').textContent = '❌ Stream failed. Check console.';
+                                }
+                                playMovieBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                            });
+                        }
+                    });
+
+                    window.wtClient.on('error', function (err) {
+                        console.error('WebTorrent Error:', err);
+                        if (moviePlaceholder) {
+                            moviePlaceholder.style.display = 'flex';
+                            moviePlaceholder.querySelector('i').className = 'fas fa-exclamation-triangle';
+                            moviePlaceholder.querySelector('p').textContent = 'Error connecting to host stream.';
+                        }
+                    });
+                    return;
+                }
+
+                if (moviePlaceholder) moviePlaceholder.style.display = 'none';
+                playMovieBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                try {
+                    const response = await fetch(`${BACKEND_URL}/api/stream`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ link: url })
+                    });
+
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error);
+
+                    currentMovieUrl = url;
+                    if (roomIsHost) roomSyncState();
+
+                    if (data.type === 'queued') {
+                        if (moviePlaceholder) {
+                            moviePlaceholder.style.display = 'flex';
+                            moviePlaceholder.querySelector('i').className = 'fas fa-spinner fa-spin';
+                            moviePlaceholder.querySelector('p').textContent = '⏳ Video Queued. Waiting for available slot...';
+                        }
+                        pollStreamStatus(data.sessionId);
+                        return;
+                    }
+
+                    loadPlayerSource(data.url);
+                    playMovieBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                } catch (err) {
+                    console.error(err);
+                    alert('Error loading stream: ' + err.message);
+                    playMovieBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                }
+            };
+
+            async function pollStreamStatus(sessionId) {
+                try {
+                    const res = await fetch(`${BACKEND_URL}/api/stream/status/${sessionId}`);
+                    const state = await res.json();
+
+                    if (state.error || state.status === 'error') {
+                        throw new Error(state.error || 'Transcoding failed abruptly');
+                    }
+
+                    if (state.status === 'queued') {
+                        if (moviePlaceholder) moviePlaceholder.querySelector('p').textContent = '⏳ Video Queued. Waiting for available slot...';
+                        setTimeout(() => pollStreamStatus(sessionId), 2000);
+                    } else if (state.status === 'processing') {
+                        if (moviePlaceholder) moviePlaceholder.querySelector('p').textContent = '⚙️ Processing video chunking...';
+                        setTimeout(() => pollStreamStatus(sessionId), 1000);
+                    } else if (state.status === 'ready' && state.url) {
+                        playMovieBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                        loadPlayerSource(state.url);
+                    }
+                } catch (err) {
+                    console.error('[PollingError]', err);
+                    if (moviePlaceholder) {
+                        moviePlaceholder.style.display = 'flex';
+                        moviePlaceholder.querySelector('i').className = 'fas fa-exclamation-triangle';
+                        moviePlaceholder.querySelector('p').textContent = `❌ ${err.message}`;
+                    }
+                    playMovieBtn.innerHTML = '<i class="fas fa-play"></i> Play';
+                }
+            }
+
+            function loadPlayerSource(sourceUrl) {
+                if (sourceUrl.includes('youtube.com/embed') || (!sourceUrl.match(/\.(mp4|webm|ts|m3u8|mkv)$/i) && !sourceUrl.includes('/api/stream') && !sourceUrl.includes('/hls/'))) {
+                    videoPlayer.style.display = 'none';
+                    if (hlsInstance) hlsInstance.destroy();
+                    movieIframe.style.display = 'block';
+                    movieIframe.src = sourceUrl;
+                    return;
+                }
+
+                movieIframe.style.display = 'none';
+                movieIframe.src = '';
+                videoPlayer.style.display = 'block';
+
+                if (sourceUrl.includes('.m3u8') && Hls.isSupported()) {
+                    if (hlsInstance) hlsInstance.destroy();
+                    hlsInstance = new Hls();
+                    hlsInstance.loadSource(sourceUrl);
+                    hlsInstance.attachMedia(videoPlayer);
+                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, function () {
+                        videoPlayer.play().catch(e => console.error("Playback prevented:", e));
+                    });
+                } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl') && sourceUrl.includes('.m3u8')) {
+                    videoPlayer.src = sourceUrl;
+                    videoPlayer.addEventListener('loadedmetadata', function () {
+                        videoPlayer.play().catch(e => console.error("Playback prevented:", e));
+                    });
+                } else {
+                    videoPlayer.src = sourceUrl;
+                    videoPlayer.play().catch(e => console.error("Playback prevented:", e));
+                }
+            }
+
+            if (playMovieBtn) playMovieBtn.addEventListener('click', playMovie);
+
+            if (movieLinkInput) {
+                movieLinkInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') playMovie();
+                });
+            }
+
+            // ─── Room System (Movie Sync) ──────────────────────────────────────
+            let roomWs = null;
+            let roomCode = null;
+            let roomIsHost = false;
+            let roomUsername = '';
+            let roomMembers = [];
+            let roomConnected = false;
+            let currentMovieUrl = '';
+            let myUserId = null;
+            let currentLocalSessionId = null; // Backend session for local file streaming
+
+            // ── P2P seeding fallback (when server upload fails) ───────────────
+            function startP2PSeeding(file) {
+                const trackerOpts = {
+                    announce: [
+                        'wss://tracker.openwebtorrent.com',
+                        'wss://tracker.webtorrent.dev',
+                        'wss://tracker.files.fm:7073/announce',
+                        'wss://spacetradersapi-chatbox.herokuapp.com:443/announce'
+                    ]
+                };
+                if (!window.wtClient) window.wtClient = new WebTorrent({ tracker: trackerOpts });
+                window.wtClient.seed(file, trackerOpts, (torrent) => {
+                    console.log('[P2P Fallback] Seeding started. Magnet:', torrent.magnetURI);
+                    currentMovieUrl = 'localseed:' + torrent.magnetURI;
+                    if (movieLinkInput) movieLinkInput.value = `Local File: ${file.name} [P2P Ready ✓]`;
+                    showRoomToast('✅ P2P ready! (same network works best)', 'info');
+                    roomSyncStateWithRetry();
+                });
+            }
+
+            // ── Cleanup local session when leaving or new file selected ───────
+            function cleanupLocalSession() {
+                if (currentLocalSessionId) {
+                    fetch(`${BACKEND_URL}/api/stream/localfile/${currentLocalSessionId}`, { method: 'DELETE' })
+                        .catch(e => { });
+                    currentLocalSessionId = null;
+                }
+            }
+            window.addEventListener('beforeunload', cleanupLocalSession);
+
+            // WebRTC State
+            let localStream = null;
+            let isMicOn = false;
+            let isCamOn = false;
+            const peers = {};
+
+            const roomNavBtn = document.getElementById('roomNavBtn');
+            const drawerRoomBtn = document.querySelector('.drawer-room-btn');
+            const roomModal = document.getElementById('roomModal');
+            const movieSideCard = document.getElementById('movieSideCard');
+            const sideCardRoomCode = document.getElementById('sideCardRoomCode');
+            const sideCardMemberCount = document.getElementById('sideCardMemberCount');
+            const sideCardMembersList = document.getElementById('sideCardMembersList');
+            const toggleSideMicBtn = document.getElementById('toggleSideMicBtn');
+            const toggleSideCamBtn = document.getElementById('toggleSideCamBtn');
+
+            const rtcConfig = {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:global.stun.twilio.com:3478' }
+                ]
+            };
+
+            async function toggleLocalStream(type) {
+                if (type === 'mic') {
+                    isMicOn = !isMicOn;
+                    toggleSideMicBtn.innerHTML = isMicOn ? '<i class="fas fa-microphone"></i>' : '<i class="fas fa-microphone-slash"></i>';
+                    toggleSideMicBtn.className = isMicOn ? 'sidebar-btn active' : 'sidebar-btn danger';
+                } else {
+                    isCamOn = !isCamOn;
+                    toggleSideCamBtn.innerHTML = isCamOn ? '<i class="fas fa-video"></i>' : '<i class="fas fa-video-slash"></i>';
+                    toggleSideCamBtn.className = isCamOn ? 'sidebar-btn active' : 'sidebar-btn danger';
+                }
+
+                if (!isMicOn && !isCamOn && localStream) {
+                    localStream.getTracks().forEach(t => t.stop());
+                    localStream = null;
+                } else if ((isMicOn || isCamOn) && !localStream) {
+                    try {
+                        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                        localStream.getAudioTracks().forEach(t => t.enabled = isMicOn);
+                        localStream.getVideoTracks().forEach(t => t.enabled = isCamOn);
+
+                        const myVid = document.getElementById(`vid_${myUserId}`);
+                        if (myVid) {
+                            myVid.srcObject = localStream;
+                            myVid.style.display = isCamOn ? 'block' : 'none';
+                        }
+
+                        for (let uid in peers) {
+                            localStream.getTracks().forEach(track => {
+                                const senders = peers[uid].getSenders();
+                                if (!senders.find(s => s.track === track)) {
+                                    peers[uid].addTrack(track, localStream);
+                                }
+                            });
+                            createAndSendOffer(uid);
+                        }
+                    } catch (e) {
+                        console.error('Media error', e);
+                        showRoomToast('Permissions for mic/camera denied.', 'error');
+                        if (type === 'mic') isMicOn = false;
+                        if (type === 'cam') isCamOn = false;
+                        toggleSideMicBtn.className = 'sidebar-btn';
+                        toggleSideCamBtn.className = 'sidebar-btn';
+                        toggleSideMicBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                        toggleSideCamBtn.innerHTML = '<i class="fas fa-video-slash"></i>';
+                    }
+                } else if (localStream) {
+                    localStream.getAudioTracks().forEach(t => t.enabled = isMicOn);
+                    localStream.getVideoTracks().forEach(t => t.enabled = isCamOn);
+
+                    const myVid = document.getElementById(`vid_${myUserId}`);
+                    if (myVid) myVid.style.display = isCamOn ? 'block' : 'none';
+                }
+
+                updateRoomUI();
+            }
+
+            if (toggleSideMicBtn) toggleSideMicBtn.addEventListener('click', () => toggleLocalStream('mic'));
+            if (toggleSideCamBtn) toggleSideCamBtn.addEventListener('click', () => toggleLocalStream('cam'));
+
+            function createPeerConnection(userId) {
+                if (peers[userId]) return peers[userId];
+
+                const pc = new RTCPeerConnection(rtcConfig);
+                peers[userId] = pc;
+
+                if (localStream) {
+                    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+                }
+
+                pc.onicecandidate = (event) => {
+                    if (event.candidate && roomWs && roomWs.readyState === WebSocket.OPEN) {
+                        roomWs.send(JSON.stringify({
+                            type: 'webrtc_signal',
+                            to: userId,
+                            signal: { type: 'candidate', candidate: event.candidate }
+                        }));
+                    }
+                };
+
+                pc.ontrack = (event) => {
+                    const vidElement = document.getElementById(`vid_${userId}`);
+                    if (vidElement) {
+                        vidElement.srcObject = event.streams[0];
+                        vidElement.style.display = 'block';
+                    }
+                };
+
+                return pc;
+            }
+
+            async function createAndSendOffer(userId) {
+                const pc = createPeerConnection(userId);
+                try {
+                    const offer = await pc.createOffer();
+                    await pc.setLocalDescription(offer);
+                    if (roomWs && roomWs.readyState === WebSocket.OPEN) {
+                        roomWs.send(JSON.stringify({
+                            type: 'webrtc_signal',
+                            to: userId,
+                            signal: offer
+                        }));
+                    }
+                } catch (e) {
+                    console.error('Error creating offer', e);
+                }
+            }
+
+            async function handleWebRTCMessage(msg) {
+                const userId = msg.from;
+                const signal = msg.signal;
+
+                const pc = createPeerConnection(userId);
+
+                try {
+                    if (signal.type === 'offer') {
+                        await pc.setRemoteDescription(new RTCSessionDescription(signal));
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        roomWs.send(JSON.stringify({
+                            type: 'webrtc_signal',
+                            to: userId,
+                            signal: answer
+                        }));
+                    } else if (signal.type === 'answer') {
+                        await pc.setRemoteDescription(new RTCSessionDescription(signal));
+                    } else if (signal.type === 'candidate') {
+                        await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+                    }
+                } catch (e) {
+                    console.error('WebRTC handle error:', e);
+                }
+            }
+
+            function clearAllPeers() {
+                for (let uid in peers) {
+                    peers[uid].close();
+                    delete peers[uid];
+                }
+                if (localStream) {
+                    localStream.getTracks().forEach(t => t.stop());
+                    localStream = null;
+                }
+                isMicOn = false; isCamOn = false;
+                toggleSideMicBtn.className = 'sidebar-btn';
+                toggleSideCamBtn.className = 'sidebar-btn';
+                toggleSideMicBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                toggleSideCamBtn.innerHTML = '<i class="fas fa-video-slash"></i>';
+            }
+
+            function openRoomModal() {
+                if (roomModal) roomModal.style.display = 'flex';
+                document.getElementById('rmScreenEntry').style.display = roomCode ? 'none' : 'block';
+                document.getElementById('rmScreenRoom').style.display = roomCode ? 'block' : 'none';
+            }
+            function closeRoomModal() {
+                if (roomModal) roomModal.style.display = 'none';
+            }
+
+            if (roomNavBtn) roomNavBtn.addEventListener('click', openRoomModal);
+            if (drawerRoomBtn) drawerRoomBtn.addEventListener('click', () => { closeDrawer(); openRoomModal(); });
+            document.getElementById('rmClose')?.addEventListener('click', closeRoomModal);
+            document.querySelector('.rm-backdrop')?.addEventListener('click', closeRoomModal);
+
+            // ─── FIX 4: Normal sync (only when WS is open and we are host) ───
+            function roomSyncState() {
+                if (!roomWs || !roomIsHost || roomWs.readyState !== WebSocket.OPEN) return;
+                const state = { movieUrl: currentMovieUrl };
+                roomWs.send(JSON.stringify({ type: 'sync_state', state }));
+                console.log('[Room] Synced state to members:', state);
+            }
+
+            // ─── FIX 5: Retry sync — useful when seeding completes before WS is fully open ───
+            function roomSyncStateWithRetry(attempts = 0) {
+                if (roomWs && roomIsHost && roomWs.readyState === WebSocket.OPEN) {
+                    roomSyncState();
+                } else if (attempts < 10) {
+                    // Retry every 500ms for up to 5 seconds
+                    setTimeout(() => roomSyncStateWithRetry(attempts + 1), 500);
+                } else {
+                    console.warn('[Room] Could not sync state: WS not open or not host after retries.');
+                }
+            }
+
+            function applyRoomState(state) {
+                if (!state) return;
+                if (state.movieUrl && state.movieUrl !== currentMovieUrl) {
+                    currentMovieUrl = state.movieUrl;
+
+                    if (currentMovieUrl.startsWith('localstream:')) {
+                        // ── Server-based stream: just trigger playMovie ──────────
+                        const parts = currentMovieUrl.split(':');
+                        const fileName = decodeURIComponent(parts[2] || 'video');
+
+                        if (moviePlaceholder) {
+                            moviePlaceholder.style.display = 'flex';
+                            moviePlaceholder.querySelector('i').className = 'fas fa-spinner fa-spin';
+                            moviePlaceholder.querySelector('p').textContent = `🎬 Host shared: ${fileName} — Loading...`;
+                        }
+                        if (movieLinkInput) movieLinkInput.value = currentMovieUrl;
+                        setTimeout(() => playMovie(), 200);
+
+                    } else if (currentMovieUrl.startsWith('localseed:')) {
+                        // ── Legacy P2P fallback ──────────────────────────────────
+                        if (movieLinkInput) movieLinkInput.value = currentMovieUrl;
+                        if (moviePlaceholder) {
+                            moviePlaceholder.style.display = 'flex';
+                            moviePlaceholder.querySelector('i').className = 'fas fa-spinner fa-spin';
+                            moviePlaceholder.querySelector('p').textContent = '📡 Connecting via P2P...';
+                        }
+                        setTimeout(() => playMovie(), 300);
+
+                    } else if (currentMovieUrl.startsWith('Local File:')) {
+                        // Host playing local file with no sharing method available
+                        if (moviePlaceholder) {
+                            moviePlaceholder.style.display = 'flex';
+                            moviePlaceholder.querySelector('p').textContent = `Host is playing a local file. Cannot stream it.`;
+                            moviePlaceholder.querySelector('i').className = 'fas fa-eye-slash';
+                        }
+                        videoPlayer.style.display = 'none';
+                        videoPlayer.pause();
+                        movieIframe.style.display = 'none';
+                        movieIframe.src = '';
+
+                    } else {
+                        // Normal URL (mp4, m3u8, etc.)
+                        if (moviePlaceholder) {
+                            moviePlaceholder.querySelector('p').textContent = 'Enter a link above to start streaming';
+                            moviePlaceholder.querySelector('i').className = 'fas fa-video';
+                        }
+                        if (movieLinkInput) movieLinkInput.value = currentMovieUrl;
+                        playMovie();
+                    }
+                }
+            }
+
+            function roomConnect(onOpen) {
+                if (roomWs && roomWs.readyState === WebSocket.OPEN) { onOpen(); return; }
+                roomWs = new WebSocket(WS_URL);
+                roomWs.onopen = () => {
+                    roomConnected = true;
+                    onOpen();
+                };
+                roomWs.onclose = () => {
+                    roomConnected = false;
+                    if (roomCode) { roomAddChat('🔌 Disconnected from room.', 'system'); updateRoomUI(); }
+                    roomCode = null; roomIsHost = false; roomMembers = [];
+                    myUserId = null;
+                    clearAllPeers();
+                    updateRoomUI();
+                };
+                roomWs.onerror = () => { roomConnected = false; };
+                roomWs.onmessage = (e) => {
+                    let msg;
+                    try { msg = JSON.parse(e.data); } catch { return; }
+                    handleRoomMessage(msg);
+                };
+            }
+
+            function handleRoomMessage(msg) {
+                switch (msg.type) {
+                    case 'room_created':
+                        roomCode = msg.code; roomIsHost = true; roomMembers = msg.members; myUserId = msg.myId;
+                        localStorage.setItem('moon_movie_room_code', roomCode);
+                        localStorage.setItem('moon_movie_room_username', roomUsername);
+                        updateRoomUI(); roomAddChat(`✅ Room <b>${roomCode}</b> created! Share this code with friends.`, 'system');
+                        // ─── FIX 7: If a movie was already loaded before room was created, sync immediately ───
+                        if (currentMovieUrl) {
+                            setTimeout(() => roomSyncState(), 200);
+                        }
+                        break;
+                    case 'room_joined':
+                        roomCode = msg.code; roomIsHost = false; roomMembers = msg.members; myUserId = msg.myId;
+                        localStorage.setItem('moon_movie_room_code', roomCode);
+                        localStorage.setItem('moon_movie_room_username', roomUsername);
+                        updateRoomUI(); roomAddChat(`✅ Joined room <b>${roomCode}</b> hosted by <b>${msg.hostName}</b>`, 'system');
+                        if (msg.state) applyRoomState(msg.state);
+
+                        roomMembers.forEach(m => {
+                            if (m.id !== myUserId) createAndSendOffer(m.id);
+                        });
+                        break;
+                    case 'room_error':
+                        showRoomToast(msg.message, 'error');
+                        break;
+                    case 'room_left':
+                        roomCode = null; roomIsHost = false; roomMembers = []; myUserId = null;
+                        clearAllPeers();
+                        updateRoomUI(); roomAddChat('👋 You left the room.', 'system');
+                        break;
+                    case 'you_are_host':
+                        roomIsHost = true; updateRoomUI(); roomAddChat('👑 You are now the host.', 'system');
+                        break;
+                    case 'host_left':
+                        roomMembers = msg.members; updateRoomUI(); roomAddChat(`👑 Host left. <b>${msg.newHost}</b> is now the host.`, 'system');
+                        break;
+                    case 'state_update':
+                        if (!roomIsHost) applyRoomState(msg.state);
+                        break;
+                    case 'member_joined':
+                        roomMembers = msg.members;
+                        updateRoomUI();
+                        roomAddChat(`👤 <b>${msg.user.name}</b> joined the room.`, 'system');
+                        // ─── FIX 8: Host syncs current state to newly joined member ───
+                        if (roomIsHost && currentMovieUrl) {
+                            setTimeout(() => roomSyncState(), 300);
+                        }
+                        break;
+                    case 'member_left':
+                        roomMembers = msg.members; updateRoomUI(); roomAddChat(`👤 <b>${msg.username}</b> left the room.`, 'system');
+                        if (peers[msg.userId]) { peers[msg.userId].close(); delete peers[msg.userId]; }
+                        break;
+                    case 'chat':
+                        roomAddChat(`<b>${msg.username}${msg.isHost ? ' 👑' : ''}</b>: ${escapeHtml(msg.message)}`, 'user', msg.username === roomUsername);
+                        break;
+                    case 'webrtc_signal':
+                        handleWebRTCMessage(msg);
+                        break;
+                }
+            }
+
+            function updateRoomUI() {
+                const badge = document.getElementById('roomBadge');
+                const btn = document.getElementById('roomNavBtn');
+                const memberCount = document.getElementById('roomMemberCount');
+                const roomCodeDisplay = document.getElementById('roomCodeDisplay');
+                const roomStatus = document.getElementById('roomStatus');
+                const leaveBtn = document.getElementById('roomLeaveBtn');
+                const movieSideCard = document.getElementById('movieSideCard');
+                const sideCardRoomCode = document.getElementById('sideCardRoomCode');
+                const sideCardMemberCount = document.getElementById('sideCardMemberCount');
+                const sideCardMembersList = document.getElementById('sideCardMembersList');
+
+                if (roomCode) {
+                    if (badge) { badge.style.display = 'flex'; badge.textContent = roomMembers.length; }
+                    if (btn) btn.style.color = 'var(--accent)';
+                    if (memberCount) memberCount.textContent = roomMembers.length;
+                    if (roomCodeDisplay) roomCodeDisplay.textContent = roomCode;
+                    if (roomStatus) roomStatus.textContent = roomIsHost ? '👑 You are the host' : '🎧 Watching with others';
+                    if (leaveBtn) leaveBtn.style.display = 'flex';
+                    if (movieSideCard) movieSideCard.style.display = 'flex';
+                    if (sideCardRoomCode) sideCardRoomCode.textContent = roomCode;
+                    if (sideCardMemberCount) sideCardMemberCount.textContent = roomMembers.length;
+
+                    const membersList = document.getElementById('roomMembersList');
+                    const sideMembersListHTML = roomMembers.map((m, i) => {
+                        const name = m.name;
+                        const isMe = m.id === myUserId;
+                        const hasVidUrl = isMe ? (localStream && isCamOn) : (peers[m.id] && peers[m.id].getReceivers().some(r => r.track && r.track.kind === 'video'));
+
+                        return `
+                        <div class="sidebar-member-item">
+                            <div class="sidebar-member-header">
+                                <div class="sidebar-member-dp">${name.charAt(0).toUpperCase()}</div>
+                                <div class="sidebar-member-info">
+                                    <div class="sidebar-member-name">${escapeHtml(name)} ${isMe ? '(You)' : ''}</div>
+                                    <div class="sidebar-member-status">
+                                        <i class="fas fa-signal active"></i>
+                                        ${m.isHost ? '<span style="color:var(--accent);">Host</span>' : 'Member'}
+                                    </div>
+                                </div>
+                            </div>
+                            <video id="vid_${m.id}" class="sidebar-member-video" autoplay playsinline ${isMe ? 'muted' : ''} style="display: ${hasVidUrl ? 'block' : 'none'}"></video>
+                        </div>`;
+                    }).join('');
+
+                    if (sideCardMembersList) sideCardMembersList.innerHTML = sideMembersListHTML;
+
+                    if (membersList) {
+                        membersList.innerHTML = roomMembers.map((m, i) =>
+                            `<div class="room-member-item" style="display:flex; align-items:center; gap:.4rem; background:rgba(255,255,255,.05); border-radius:20px; padding:.3rem .7rem .3rem .4rem; font-size:.82rem;">
+                                <div class="room-member-avatar" style="width:22px; height:22px; border-radius:50%; background:var(--accent); color:#111; font-size:.65rem; font-weight:700; display:flex; align-items:center; justify-content:center;">${m.name.charAt(0).toUpperCase()}</div>
+                                <span>${escapeHtml(m.name)}</span>
+                                ${m.isHost ? '<span class="room-host-tag" style="font-size:.65rem; color:var(--accent); background:rgba(0,229,255,.1); border-radius:4px; padding:.1rem .4rem;">Host</span>' : ''}
+                            </div>`
+                        ).join('');
+                    }
+
+                    if (localStream && myUserId) {
+                        const myVid = document.getElementById(`vid_${myUserId}`);
+                        if (myVid && !myVid.srcObject) { myVid.srcObject = localStream; myVid.style.display = isCamOn ? 'block' : 'none'; }
+                    }
+
+                    roomMembers.forEach(m => {
+                        if (m.id !== myUserId && peers[m.id]) {
+                            const pVid = document.getElementById(`vid_${m.id}`);
+                            const recv = peers[m.id].getReceivers().find(r => r.track && r.track.kind === 'video');
+                            if (pVid && recv && peers[m.id].getReceivers()[0].track) {
+                                const stream = new MediaStream(peers[m.id].getReceivers().map(r => r.track));
+                                pVid.srcObject = stream;
+                                pVid.style.display = 'block';
+                            }
+                        }
+                    });
+
+                } else {
+                    if (badge) badge.style.display = 'none';
+                    if (btn) btn.style.color = '';
+                    if (leaveBtn) leaveBtn.style.display = 'none';
+                    if (movieSideCard) movieSideCard.style.display = 'none';
+                }
+            }
+
+            function roomAddChat(html, type = 'user', isSelf = false) {
+                const log = document.getElementById('roomChatLog');
+                if (!log) return;
+                const div = document.createElement('div');
+                div.innerHTML = html;
+                div.style.fontSize = '.82rem';
+                div.style.lineHeight = '1.4';
+                div.style.padding = '.3rem .5rem';
+                div.style.borderRadius = '8px';
+
+                if (type === 'system') {
+                    div.style.color = 'rgba(0,229,255,.6)';
+                    div.style.fontStyle = 'italic';
+                    div.style.fontSize = '.78rem';
+                } else {
+                    div.style.color = 'rgba(255,255,255,.75)';
+                }
+                if (isSelf) {
+                    div.style.background = 'rgba(0,229,255,.07)';
+                    div.style.color = '#fff';
+                }
+                log.appendChild(div);
+                log.scrollTop = log.scrollHeight;
+            }
+
+            function showRoomToast(msg, type = 'info') {
+                const toast = document.getElementById('roomToast');
+                if (!toast) return;
+                toast.textContent = msg;
+                toast.style.display = 'block';
+                toast.style.position = 'fixed';
+                toast.style.bottom = '2rem';
+                toast.style.left = '50%';
+                toast.style.transform = 'translateX(-50%)';
+                toast.style.background = 'rgba(30,30,36,.95)';
+                toast.style.border = type === 'error' ? '1px solid rgba(255,75,75,.4)' : '1px solid rgba(255,255,255,.12)';
+                toast.style.color = type === 'error' ? '#ff8888' : '#fff';
+                toast.style.padding = '.7rem 1.4rem';
+                toast.style.borderRadius = '12px';
+                toast.style.fontSize = '.88rem';
+                toast.style.zIndex = '99999';
+                toast.style.backdropFilter = 'blur(12px)';
+
+                clearTimeout(toast._timeout);
+                toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 3500);
+            }
+
+            function escapeHtml(s) {
+                return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            document.getElementById('rmCreateBtn')?.addEventListener('click', () => {
+                const username = document.getElementById('rmUsername').value.trim() || 'Host';
+                roomUsername = username;
+                roomConnect(() => {
+                    roomWs.send(JSON.stringify({ type: 'create_room', username, state: { movieUrl: currentMovieUrl }, roomType: 'movie' }));
+                    document.getElementById('rmScreenEntry').style.display = 'none';
+                    document.getElementById('rmScreenRoom').style.display = 'block';
+                });
+            });
+
+            document.getElementById('rmJoinBtn')?.addEventListener('click', () => {
+                const username = document.getElementById('rmUsername').value.trim() || 'Listener';
+                const code = document.getElementById('rmJoinCode').value.trim();
+                if (code.length !== 4) return showRoomToast('Please enter a 4-digit code', 'error');
+                roomUsername = username;
+                roomConnect(() => {
+                    roomWs.send(JSON.stringify({ type: 'join_room', code, username, roomType: 'movie' }));
+                    document.getElementById('rmScreenEntry').style.display = 'none';
+                    document.getElementById('rmScreenRoom').style.display = 'block';
+                });
+            });
+
+            document.getElementById('roomLeaveBtn')?.addEventListener('click', () => {
+                if (roomWs && roomWs.readyState === WebSocket.OPEN) {
+                    roomWs.send(JSON.stringify({ type: 'leave_room' }));
+                }
+                localStorage.removeItem('moon_movie_room_code');
+                localStorage.removeItem('moon_movie_room_username');
+                // If host, clean up uploaded file
+                if (roomIsHost) cleanupLocalSession();
+                document.getElementById('rmScreenEntry').style.display = 'block';
+                document.getElementById('rmScreenRoom').style.display = 'none';
+            });
+
+            document.getElementById('rmCopyCode')?.addEventListener('click', () => {
+                if (roomCode) {
+                    navigator.clipboard.writeText(roomCode);
+                    showRoomToast('Room code copied!');
+                }
+            });
+
+            const sendChat = () => {
+                const input = document.getElementById('rmChatInput');
+                if (!input) return;
+                const msg = input.value.trim();
+                if (!msg || !roomWs || roomWs.readyState !== WebSocket.OPEN || !roomCode) return;
+                roomWs.send(JSON.stringify({ type: 'chat', message: msg }));
+                input.value = '';
+            };
+
+            document.getElementById('rmSendChat')?.addEventListener('click', sendChat);
+            document.getElementById('rmChatInput')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendChat();
+            });
+
+            // Rejoin room if previously joined
+            try {
+                const savedMovieRoomCode = localStorage.getItem('moon_movie_room_code');
+                const savedMovieRoomUsername = localStorage.getItem('moon_movie_room_username');
+                if (savedMovieRoomCode && savedMovieRoomUsername) {
+                    roomUsername = savedMovieRoomUsername;
+                    roomConnect(() => {
+                        roomWs.send(JSON.stringify({ type: 'join_room', code: savedMovieRoomCode, username: savedMovieRoomUsername, roomType: 'movie' }));
+                        document.getElementById('rmScreenEntry').style.display = 'none';
+                        document.getElementById('rmScreenRoom').style.display = 'block';
+                    });
+                }
+            } catch (e) { }
+
+        });
+    </script>
+</body>
+
+</html>
