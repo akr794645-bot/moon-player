@@ -10,9 +10,9 @@ const PORT = process.env.PORT || 3000;
 
 // ─── Lavalink Config ──────────────────────────────────────────────────────────
 const LAVALINK = {
-    host: 'darli.hidencloud.com',
-    port: 24670,
-    password: 'zenkaiop',
+    host: 'zac.hidencloud.com',
+    port: 24577,
+    password: 'youshallnotpass',
     secure: false,
 };
 
